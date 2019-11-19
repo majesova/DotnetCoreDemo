@@ -1,9 +1,7 @@
-using IdentityServer4.EntityFramework.Options;
-using Microsoft.AspNetCore.ApiAuthorization.IdentityServer;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using PDV.API.Data.Entities;
+using System.Text.RegularExpressions;
 
 namespace PDV.API.Data
 {
@@ -17,7 +15,6 @@ namespace PDV.API.Data
         {
 
         }
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             //https://docs.microsoft.com/en-us/ef/core/modeling/
@@ -45,6 +42,44 @@ namespace PDV.API.Data
             });
 
             base.OnModelCreating(modelBuilder);
+
+            AdjustNamesForPostgreSqlStandard(modelBuilder);
+        }
+        /// <summary>
+        /// Cambia los nombres al format: xxx_xx_xx
+        /// </summary>
+        /// <param name="modelBuilder">modelod de tablas</param>
+        private void AdjustNamesForPostgreSqlStandard(ModelBuilder modelBuilder) {
+
+            foreach (var entity in modelBuilder.Model.GetEntityTypes())
+            {
+                // Replace table names
+                entity.SetTableName(entity.GetTableName().ToSnakeCase());
+                // Replace column names            
+                foreach (var property in entity.GetProperties())
+                    property.SetColumnName(property.GetColumnName().ToSnakeCase());
+                
+                foreach (var key in entity.GetKeys())
+                    key.SetName(key.GetName().ToSnakeCase());
+                
+                foreach (var key in entity.GetForeignKeys())
+                    key.SetConstraintName(key.GetConstraintName().ToSnakeCase());
+                
+                foreach (var index in entity.GetIndexes())
+                    index.SetName(index.GetName().ToSnakeCase());   
+            }
+        }
+
+       
+    }
+    public static class StringExtensions
+    {
+        public static string ToSnakeCase(this string input)
+        {
+            if (string.IsNullOrEmpty(input)) { return input; }
+
+            var startUnderscores = Regex.Match(input, @"^_+");
+            return startUnderscores + Regex.Replace(input, @"([a-z0-9])([A-Z])", "$1_$2").ToLower();
         }
     }
 }

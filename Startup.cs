@@ -66,7 +66,8 @@ namespace PDV.API
             });
             #endregion
             //Database configuration
-            services.AddDbContext<PDVContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+            //services.AddDbContext<PDVContext>(options => options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+            services.AddDbContext<PDVContext>(options => options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")));
             //Identity configuration
              services.AddIdentity<Account, AppRole>()
                 .AddEntityFrameworkStores<PDVContext>()
